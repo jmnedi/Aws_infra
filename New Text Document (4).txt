@@ -1,0 +1,26 @@
+My experience is focused on infrastructure and system administrator on premise, 
+and I recently certified with AWS and I have less than a year of experience in the cloud
+
+My principal weakness is the English Language.
+
+Unfortunately I dont have the fluency that I would like.
+
+I'm working on solving it though.
+
+My main weakness is the English language,
+I don't speak it as fluently as I would like,
+but I'm working on it.
+
+<img src="http://104.243.47.24/agent/images" name="livecall" alt="Live Call" width="109" height="30" border="0">
+
+[
+[19,34,36,44,22,6],
+[34,44,31,38,45,28],
+[45,25,35,42,3,36],
+[9,31,14,16,45,27],
+[30,23,37,26,22,39],
+[28,17,24,3,2,13],
+[45,5,12,11,28,46],
+[8,17,38,29,24,11],
+[39,25,32,21,24,8]
+]

@@ -1,0 +1,147 @@
+Para reiniciar la clave de un usuario de AWS en Terraform, puedes utilizar el recurso 
+aws_iam_access_key y el comando aws_iam_get_user para obtener el nombre de usuario del
+ usuario cuya clave deseas reiniciar. A continuación se presenta un ejemplo de cómo 
+reiniciar la clave de un usuario llamado "user1" con Terraform:
+
+Crea un archivo main.tf con la siguiente configuración:
+
+provider "aws" {
+  region = "us-east-1"
+}
+
+resource "aws_iam_access_key" "user1_access_key" {
+  user = "user1"
+}
+
+data "aws_iam_user" "user1" {
+  user_name = "user1"
+}
+
+output "user1_access_key_secret" {
+  value = aws_iam_access_key.user1_access_key.secret
+}
+
+Ejecuta el comando terraform init para inicializar el directorio de trabajo de Terraform.
+
+Ejecuta el comando terraform apply para crear una clave de acceso para el usuario de 
+IAM "user1".
+
+Si desea reiniciar la clave, simplemente ejecute el comando terraform taint 
+aws_iam_access_key.user1_access_key para marcar el recurso como obsoleto y forzar 
+su recreación en la próxima ejecución de terraform apply. Luego, ejecute nuevamente el 
+comando terraform apply.
+
+Nota: Ten en cuenta que al reiniciar la clave de acceso del usuario, cualquier aplicación
+ o servicio que utilice la clave antigua dejará de funcionar hasta que se actualice con la
+ nueva clave.
+
+////////////////////////////////////////////
+
+Para cambiar la clave de un usuario de AWS en Terraform, puedes utilizar el recurso 
+aws_iam_user_login_profile de la siguiente manera:
+
+Agrega el siguiente código en tu archivo main.tf:
+
+resource "aws_iam_user_login_profile" "user01_password" {
+  user                    = "User01"
+  password_reset_required = true
+  pgp_key                 = ""
+  password_length         = 16
+  password                = "E(r5RU!1jQZn=C=e"
+}
+///////////////////////////////////////////
+Para forzar al usuario User01 a cambiar su clave de acceso en AWS 
+utilizando Terraform, puedes utilizar el recurso aws_iam_login_profile
+ de la siguiente manera:
+
+Agrega el siguiente código en tu archivo main.tf:
+
+resource "aws_iam_login_profile" "user01_login_profile" {
+  user                      = "User01"
+  password_reset_required   = true
+  password_reset_in_days    = 0
+  allow_users_to_change_pwd = true
+}
+
+///////////////////////////////////
+
+crear un usuario user1 de aws con terraform que solo pueda visualizar la
+ consola de aws y que tenga MFA
+
+Para crear un usuario user1 de AWS con Terraform que solo pueda visualizar
+ la consola de AWS y que tenga MFA, puedes seguir los siguientes pasos:
+
+Crea un archivo main.tf con la siguiente configuración:
+
+provider "aws" {
+  region = "us-east-1"
+}
+
+resource "aws_iam_user" "user1" {
+  name = "user1"
+}
+
+resource "aws_iam_user_login_profile" "user1_login_profile" {
+  user                    = aws_iam_user.user1.name
+  password_reset_required = true
+}
+
+resource "aws_iam_policy" "user1_policy" {
+  name        = "user1_policy"
+  path        = "/"
+  policy      = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "iam:CreateVirtualMFADevice",
+          "iam:EnableMFADevice",
+          "iam:ListMFADevices",
+          "iam:ListVirtualMFADevices",
+          "iam:GetUser"
+        ]
+        Resource = "*"
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "console:*"
+        ]
+        Resource = "*"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_user_policy_attachment" "user1_policy_attachment" {
+  user       = aws_iam_user.user1.name
+  policy_arn = aws_iam_policy.user1_policy.arn
+}
+
+resource "aws_iam_virtual_mfa_device" "user1_mfa_device" {
+  name = "user1_mfa_device"
+}
+
+resource "aws_iam_user_mfa_binding" "user1_mfa_binding" {
+  user_name          = aws_iam_user.user1.name
+  virtual_mfa_device = aws_iam_virtual_mfa_device.user1_mfa_device.serial_number
+}
+
+output "user1_mfa_secret" {
+  value = aws_iam_virtual_mfa_device.user1_mfa_device.base32_string_seed
+}
+
+Ejecuta el comando terraform init para inicializar el directorio de trabajo de Terraform.
+
+Ejecuta el comando terraform apply para crear el usuario de IAM, el perfil de inicio de sesión, la política de usuario, la vinculación de política y el dispositivo MFA virtual.
+
+Esta configuración crea un usuario de IAM llamado "user1" que solo tiene permisos para ver
+ la consola de AWS y realizar operaciones en su propia cuenta de usuario. También crea un 
+perfil de inicio de sesión para el usuario con un requisito de restablecimiento de contraseña.
+ Además, se crea una política de usuario personalizada que permite al usuario ver la consola 
+de AWS y realizar operaciones de IAM, así como también crear, habilitar y listar dispositivos 
+MFA virtuales. La política se adjunta al usuario y se crea un dispositivo MFA virtual y se 
+vincula al usuario. Finalmente, se muestra la semilla de MFA generada para el usuario en la 
+salida.
+

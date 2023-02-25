@@ -1,0 +1,153 @@
+Para crear una función de "Hola, mundo" con Python en AWS Lambda utilizando Terraform, 
+sigue estos pasos:
+
+Crea un nuevo directorio y crea un archivo main.tf dentro de él.
+
+Agrega el siguiente código en tu archivo main.tf:
+provider "aws" {
+  region = "us-east-1"
+}
+
+resource "aws_lambda_function" "hello_world" {
+  function_name = "hello_world_lambda"
+  role         = aws_iam_role.lambda_exec.arn
+  handler      = "lambda_function.lambda_handler"
+  runtime      = "python3.8"
+  filename     = "hello_world.zip"
+  source_code_hash = filebase64sha256("hello_world.zip")
+
+  environment {
+    variables = {
+      MESSAGE = "Hello, World!"
+    }
+  }
+
+  timeout = 10
+
+  tags = {
+    Environment = "Dev"
+  }
+}
+
+resource "aws_iam_role" "lambda_exec" {
+  name = "lambda_exec_role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "lambda.amazonaws.com"
+        }
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "lambda_exec_policy" {
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+  role       = aws_iam_role.lambda_exec.name
+}
+
+data "archive_file" "hello_world_zip" {
+  type        = "zip"
+  output_path = "hello_world.zip"
+  source_dir  = "hello_world"
+}
+
+Crea una carpeta llamada hello_world y crea un archivo lambda_function.py dentro de ella. 
+Agrega el siguiente código en el archivo lambda_function.py:
+
+def lambda_handler(event, context):
+    message = os.environ['MESSAGE'] if 'MESSAGE' in os.environ else 'Hello, World!'
+    print(message)
+    response = {
+        'statusCode': 200,
+        'body': message
+    }
+    return response
+
+Ejecuta el comando terraform init para inicializar el directorio de trabajo de Terraform.
+
+Ejecuta el comando terraform apply para aplicar los cambios y crear la función de 
+"Hola, mundo" en AWS Lambda.
+
+Verifica que la función se haya creado correctamente navegando hasta la sección de Lambda en 
+la consola de AWS y buscando la función hello_world_lambda.
+
+Haz clic en la función para ver su configuración y haz clic en "Probar" para ejecutar la función. Deberías ver el mensaje "Hello, World!" en la salida de la función.
+
+Ten en cuenta que en la configuración anterior, se ha utilizado el lenguaje de programación 
+Python 3.8 para la función, y se ha creado un archivo zip hello_world.zip que contiene el
+ código fuente de la función. La variable de entorno MESSAGE se ha establecido en 
+"Hello, World!" y se ha utilizado en la función para enviar una respuesta al cliente.
+
+Espero que esto te sea útil. ¡Buena suerte!
+
+
+/////////////////////////////////////////
+
+Para eliminar la función de Lambda que creamos anteriormente con Terraform, 
+sigue estos pasos:
+
+Abre tu archivo main.tf y agrega el siguiente código para definir el recurso 
+aws_lambda_function:
+
+resource "aws_lambda_function" "hello_world" {
+  function_name = "hello_world_lambda"
+  role         = aws_iam_role.lambda_exec.arn
+  handler      = "lambda_function.lambda_handler"
+  runtime      = "python3.8"
+  filename     = "hello_world.zip"
+  source_code_hash = filebase64sha256("hello_world.zip")
+
+  environment {
+    variables = {
+      MESSAGE = "Hello, World!"
+    }
+  }
+
+  timeout = 10
+
+  tags = {
+    Environment = "Dev"
+  }
+}
+
+Agrega el siguiente código para definir el recurso aws_iam_role:
+
+resource "aws_iam_role" "lambda_exec" {
+  name = "lambda_exec_role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "lambda.amazonaws.com"
+        }
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "lambda_exec_policy" {
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+  role       = aws_iam_role.lambda_exec.name
+}
+
+Agrega el siguiente código para definir el recurso data.archive_file:
+
+Ahora que hemos definido los recursos, ejecutamos el comando terraform destroy para eliminar
+ la función de Lambda. Terraform pedirá una confirmación antes de eliminar el recurso.
+
+Si todo sale bien, Terraform eliminará la función de Lambda, la política de rol y el rol 
+asociado. También eliminará el archivo zip que se creó anteriormente.
+
+Con esto, deberías poder eliminar la función de Lambda creada anteriormente con Terraform. 
+Asegúrate de que deseas eliminar la función antes de ejecutar terraform destroy.
+

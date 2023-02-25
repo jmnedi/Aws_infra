@@ -1,0 +1,50 @@
+Para programar una alarma en CloudWatch de AWS con Terraform que te permita 
+saber cuando te excedas de $20 durante el mes de marzo de 2023, puedes seguir
+ los siguientes pasos:
+
+Crea un archivo main.tf con la siguiente configuración:
+
+provider "aws" {
+  region = "us-east-1"
+}
+
+resource "aws_cloudwatch_metric_alarm" "example" {
+  alarm_name          = "MonthlyCostExceeded"
+  comparison_operator = "GreaterThanThreshold"
+  evaluation_periods  = "1"
+  metric_name         = "EstimatedCharges"
+  namespace           = "AWS/Billing"
+  period              = "86400"
+  statistic           = "Maximum"
+  threshold           = "20"
+  alarm_description   = "Alarm when estimated charges exceed $20"
+  dimensions = {
+    Currency = "USD"
+  }
+
+  alarm_actions = [
+    "arn:aws:sns:us-east-1:123456789012:my-sns-topic"
+  ]
+
+  ok_actions = [
+    "arn:aws:sns:us-east-1:123456789012:my-sns-topic"
+  ]
+
+  insufficient_data_actions = [
+    "arn:aws:sns:us-east-1:123456789012:my-sns-topic"
+  ]
+}
+
+Agrega tus credenciales de AWS en el archivo de configuración de Terraform.
+
+Ejecuta el comando terraform init para inicializar el directorio de trabajo de Terraform.
+
+Ejecuta el comando terraform apply para crear la alarma de CloudWatch.
+
+Esta configuración creará una alarma en CloudWatch que monitorea el costo estimado de AWS
+ (en dólares) y dispara una notificación cuando el costo estimado supera los $20. 
+La alarma se activará durante el mes de marzo de 2023 y enviará una notificación a un 
+tema de SNS específico. Recuerda reemplazar el ARN del tema de SNS con tu propio ARN de tema.
+
+Espero que esto te sea útil. ¡Buena suerte!
+

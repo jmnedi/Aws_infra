@@ -1,0 +1,35 @@
+crea un usuario UserAwsTf en AWS IAM que tenga acceso programatico en terraform 
+que tenga los permisos para crear, modificar y eliminar un recurso de EC2
+
+1.-
+aws configure
+
+2.- 
+aws iam create-user --user-name UserAwsTf
+
+3.-
+aws iam create-access-key --user-name UserAwsTf
+
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": [
+               "ec2:RunInstances",
+               "ec2:TerminateInstances",
+               "ec2:StartInstances",
+               "ec2:StopInstances",
+               "ec2:RebootInstances",
+               "ec2:DescribeInstances"
+            ],
+            "Resource": "*"
+        }
+    ]
+}
+
+aws iam put-user-policy --user-name UserAwsTf --policy-name "EC2FullAccess" --policy-document file://policy.json
+
+Recuerda que en el paso 4, hemos guardado el archivo de política con nombre 
+policy.json. Asegúrate de que ese archivo esté en el directorio actual desde 
+donde se ejecuta el comando

@@ -1,0 +1,95 @@
+Este es un ejemplo de cómo crear una VPC en Terraform para alojar 250 equipos 
+en dos subredes, donde la subred 1 es pública y la subred 2 es privada. 
+La subred pública tiene acceso a Internet, mientras que la subred privada no es
+ accesible desde Internet. Se creará una instancia de Amazon EC2 en la subred 
+privada y una instancia en la subred pública.
+
+provider "aws" {
+  region = "us-east-1"
+}
+
+resource "aws_vpc" "my_vpc" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = "my-vpc"
+  }
+}
+
+resource "aws_subnet" "public_subnet" {
+  vpc_id = aws_vpc.my_vpc.id
+  cidr_block = "10.0.0.0/24"
+  map_public_ip_on_launch = true
+  availability_zone = "us-east-1a"
+  tags = {
+    Name = "public-subnet"
+  }
+}
+
+resource "aws_subnet" "private_subnet" {
+  vpc_id = aws_vpc.my_vpc.id
+  cidr_block = "10.0.1.0/24"
+  map_public_ip_on_launch = false
+  availability_zone = "us-east-1b"
+  tags = {
+    Name = "private-subnet"
+  }
+}
+
+resource "aws_security_group" "public_sg" {
+  name_prefix = "public-sg"
+  vpc_id = aws_vpc.my_vpc.id
+  ingress {
+    from_port = 0
+    to_port = 65535
+    protocol = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+resource "aws_security_group" "private_sg" {
+  name_prefix = "private-sg"
+  vpc_id = aws_vpc.my_vpc.id
+  ingress {
+    from_port = 22
+    to_port = 22
+    protocol = "tcp"
+    cidr_blocks = [aws_subnet.public_subnet.cidr_block]
+  }
+  egress {
+    from_port = 0
+    to_port = 0
+    protocol = "-1"
+    cidr_blocks = [aws_vpc.my_vpc.cidr_block]
+  }
+}
+
+resource "aws_instance" "public_instance" {
+  ami = "ami-0c55b159cbfafe1f0"
+  instance_type = "t2.micro"
+  subnet_id = aws_subnet.public_subnet.id
+  vpc_security_group_ids = [aws_security_group.public_sg.id]
+  key_name = "my_keypair"
+  tags = {
+    Name = "public-instance"
+  }
+}
+
+resource "aws_instance" "private_instance" {
+  ami = "ami-0c55b159cbfafe1f0"
+  instance_type = "t2.micro"
+  subnet_id = aws_subnet.private_subnet.id
+  vpc_security_group_ids = [aws_security_group.private_sg.id]
+  key_name = "my_keypair"
+  tags = {
+    Name = "private-instance"
+  }
+}
+
+Este código crea una VPC con el bloque de direcciones 10.0.0.0/16, 
+una subred pública con un bloque de direcciones de 10.0.0.0/24 y una 
+subred privada con un bloque de direcciones de 10.0.1.0/24. También crea 
+dos grupos de seguridad: uno para la subred pública y otro para la subred 
+privada, y dos instancias EC2: una en la subred pública y otra en la subred 
+privada. La instancia en la subred pública es accesible desde Internet, mientras 
+que la instancia en la subred privada solo es accesible desde la subred pública.

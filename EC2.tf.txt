@@ -1,0 +1,31 @@
+En este ejemplo, se está creando una instancia EC2 en una subred (subnet_id) específica y se
+ están asignando un grupo de seguridad (vpc_security_group_ids), una clave SSH (key_name) 
+y un perfil de IAM (iam_instance_profile). Además, se está configurando la instancia para 
+recibir una dirección IP pública (associate_public_ip_address) y se está proporcionando un 
+script de inicio personalizado (user_data). Por último, se le está asignando un nombre de 
+etiqueta (tags) para identificar la instancia en la consola de AWS.
+
+Es importante tener en cuenta que los valores utilizados en este ejemplo 
+(como AMI, subred, clave SSH, etc.) son solo ejemplos y deben ser reemplazados 
+por los valores adecuados para su caso específico.
+
+resource "aws_instance" "example_instance" {
+  ami           = "ami-0c55b159cbfafe1f0"
+  instance_type = "t2.micro"
+  subnet_id     = aws_subnet.example_subnet.id
+  vpc_security_group_ids = [
+    aws_security_group.example_sg.id,
+  ]
+  key_name     = "example_key"
+  associate_public_ip_address = true
+  iam_instance_profile = aws_iam_instance_profile.example_profile.name
+  user_data = <<-EOF
+              #!/bin/bash
+              echo "Hello, World" > index.html
+              nohup python -m SimpleHTTPServer 80 &
+              EOF
+
+  tags = {
+    Name = "example-instance"
+  }
+}

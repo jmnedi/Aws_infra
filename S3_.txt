@@ -1,0 +1,81 @@
+crea un recurso S3 de AWS que sea publico y que sea accesado por el rol RolEc2toS3 
+desde una instancia EC2 llamada instancia_ejemplo.
+
+resource "aws_s3_bucket" "public_bucket" {
+  bucket = "example-bucket"
+  acl    = "public-read"
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid = "PublicRead",
+        Effect = "Allow",
+        Principal = "*",
+        Action = [
+          "s3:GetObject"
+        ],
+        Resource = [
+          "arn:aws:s3:::${aws_s3_bucket.public_bucket}/*"
+        ]
+      }
+    ]
+  })
+}
+
+Este bloque de código crea un bucket de S3 con el nombre "example-bucket" y establece 
+la ACL (acl) en "public-read", lo que significa que cualquier persona puede leer el 
+contenido del bucket. Además, se establece una política (policy) que permite a cualquier 
+persona descargar los objetos del bucket.
+
+A continuación, crea un rol de IAM que permita a las instancias EC2 acceder al bucket de S3:
+
+resource "aws_iam_role" "ec2_to_s3_role" {
+  name = "RoleEc2toS3"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = "ec2.amazonaws.com"
+        }
+        Action = "sts:AssumeRole"
+      }
+    ]
+  })
+}
+
+
+A continuación, crea una política de IAM que permita al rol acceder al bucket de S3:
+resource "aws_iam_policy" "s3_access_policy" {
+  name = "S3AccessPolicy"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow",
+        Action = [
+          "s3:GetObject",
+          "s3:PutObject",
+          "s3:ListBucket"
+        ],
+        Resource = [
+          "${aws_s3_bucket.public_bucket.arn}",
+          "${aws_s3_bucket.public_bucket.arn}/*"
+        ]
+      }
+    ]
+  })
+}
+
+Asigna la política creada al rol de IAM que creaste en el paso 2:
+
+resource "aws_iam_role_policy_attachment" "s3_access_attachment" {
+  policy_arn = aws_iam_policy.s3_access_policy.arn
+  role       = aws_iam_role.ec2_to_s3_role.name
+}
+
+
+
